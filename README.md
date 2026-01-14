@@ -237,6 +237,12 @@ This tool does not replace legal advice.
 
 ---
 
+## Report issues
+
+Found a bug or have a feature request? Please report it on GitHub: [Create an issue](https://github.com/devasghar/anonymiser/issues)
+
+---
+
 ## Development
 
 ```bash
