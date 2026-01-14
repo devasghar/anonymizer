@@ -1,6 +1,6 @@
 # Anonymiser
 
-**Anonymiser** is a **CLI-first database anonymization tool** for web projects.
+**Anonymiser** is a **CLI-first database anonymisation tool** for web projects.
 
 It allows teams to safely generate **anonymized, realistic database dumps** for development, QA, and review — **without ever exposing production data**.
 
@@ -31,7 +31,7 @@ Anonymiser ensures:
 
 - Database-first (MySQL default, PostgreSQL supported)
 - Gzipped SQL dump output (`.sql.gz`)
-- Deterministic anonymization (referential integrity preserved)
+- Deterministic anonymisation (referential integrity preserved)
 - Safe by default (dump mode, no direct writes)
 - Config-driven with optional interactive CLI prompts
 - Audit-friendly summaries and reports
@@ -186,7 +186,7 @@ ssn: {
 ```
 
 Notes:
-- This is pseudonymization, not anonymization
+- This is pseudonymization, not anonymisation
 - Key must come from environment variables
 - Intended for controlled workflows only
 
@@ -231,7 +231,7 @@ Best practices:
 - Never expose production credentials
 - Never sync anonymized data back to production
 - Prefer truncate over encrypt
-- Keep anonymization irreversible
+- Keep anonymisation irreversible
 
 This tool does not replace legal advice.
 
