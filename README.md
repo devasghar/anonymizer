@@ -45,7 +45,9 @@ No installation required.
 
 Run directly via:
 
+```bash
 npx anonymizer
+```
 
 ### Requirements
 
@@ -68,7 +70,9 @@ npx anonymizer
 
 Reads from a database or dump and produces an anonymized, gzipped SQL dump.
 
+```bash
 npx anonymizer run
+```
 
 - No writes to source DB
 - Safest for regulated environments
@@ -80,7 +84,9 @@ npx anonymizer run
 
 Writes anonymized data directly into a database.
 
+```bash
 npx anonymizer run --direct
+```
 
 Warnings:
 - Strong warning shown
@@ -93,10 +99,11 @@ Warnings:
 
 Anonymizer is driven by a config file named:
 
-anonymizer.config.ts
+`anonymizer.config.ts`
 
 ### Example Configuration
 
+```ts
 export default {
   database: {
     type: 'mysql',
@@ -123,6 +130,7 @@ export default {
     audit_logs: 'truncate'
   }
 }
+```
 
 ---
 
@@ -134,7 +142,9 @@ Each column supports exactly one action.
 
 Removes data completely.
 
+```ts
 audit_logs: 'truncate'
+```
 
 Recommended for logs, events, and sessions.
 
@@ -144,7 +154,9 @@ Recommended for logs, events, and sessions.
 
 Replaces values with realistic fake data.
 
+```ts
 email: { action: 'update', type: 'email' }
+```
 
 Supported text-based types:
 - email
@@ -165,11 +177,13 @@ Supported text-based types:
 
 Encrypts values using symmetric encryption.
 
+```ts
 ssn: {
   action: 'encrypt',
   algorithm: 'aes-256-gcm',
   keyEnv: 'ANONYMIZER_SECRET'
 }
+```
 
 Notes:
 - This is pseudonymization, not anonymization
@@ -182,7 +196,9 @@ Notes:
 
 Run without arguments to launch guided setup:
 
+```bash
 npx anonymizer
+```
 
 The CLI can generate the configuration file automatically.
 
@@ -200,8 +216,10 @@ The CLI can generate the configuration file automatically.
 
 Example GitHub Actions step:
 
+```yaml
 - name: Anonymize Database
   run: npx anonymizer run --config anonymizer.config.ts
+```
 
 ---
 
@@ -221,9 +239,11 @@ This tool does not replace legal advice.
 
 ## Development
 
+```bash
 npm install
 npm run dev
 npm run build
+```
 
 ---
 
