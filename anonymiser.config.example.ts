@@ -6,7 +6,7 @@ export default {
   },
 
   output: {
-    file: './anonymized.sql.gz',
+    file: './anonymised.sql.gz',
   },
 
   tables: {
@@ -17,7 +17,7 @@ export default {
       national_id: {
         action: 'encrypt',
         algorithm: 'aes-256-gcm',
-        keyEnv: 'ANONYMIZER_SECRET',
+        keyEnv: 'ANONYMISER_SECRET',
       },
     },
 

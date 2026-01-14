@@ -1,6 +1,6 @@
-# Anonymizer
+# Anonymiser
 
-**Anonymizer** is a **CLI-first database anonymization tool** for web projects.
+**Anonymiser** is a **CLI-first database anonymization tool** for web projects.
 
 It allows teams to safely generate **anonymized, realistic database dumps** for development, QA, and review — **without ever exposing production data**.
 
@@ -13,14 +13,14 @@ Distributed as an **npm package** and executed via **npx** — no global install
 
 ---
 
-## Why Anonymizer?
+## Why Anonymiser?
 
 Using production databases in development is:
 - **Dangerous** (data leaks happen)
 - **Illegal** under GDPR in most cases
 - **Operationally risky** (accidental writes, corruption)
 
-Anonymizer ensures:
+Anonymiser ensures:
 - No real personal data leaves secure environments
 - Anonymized data remains **structurally realistic**
 - Teams can work with confidence and speed
@@ -46,7 +46,7 @@ No installation required.
 Run directly via:
 
 ```bash
-npx @devasghar/anonymizer
+npx anonymiser
 ```
 
 ### Requirements
@@ -71,7 +71,7 @@ npx @devasghar/anonymizer
 Reads from a database or dump and produces an anonymized, gzipped SQL dump.
 
 ```bash
-npx @devasghar/anonymizer run
+npx anonymiser run
 ```
 
 - No writes to source DB
@@ -85,7 +85,7 @@ npx @devasghar/anonymizer run
 Writes anonymized data directly into a database.
 
 ```bash
-npx @devasghar/anonymizer run --direct
+npx anonymiser run --direct
 ```
 
 Warnings:
@@ -97,9 +97,9 @@ Warnings:
 
 ## Configuration
 
-Anonymizer is driven by a config file named:
+Anonymiser is driven by a config file named:
 
-`anonymizer.config.ts`
+`anonymiser.config.ts`
 
 ### Example Configuration
 
@@ -123,7 +123,7 @@ export default {
       national_id: {
         action: 'encrypt',
         algorithm: 'aes-256-gcm',
-        keyEnv: 'ANONYMIZER_SECRET'
+        keyEnv: 'ANONYMISER_SECRET'
       }
     },
 
@@ -136,7 +136,7 @@ export default {
 
 ## Column Actions
 
-Each column supports exactly one action.
+Each column supports following action.
 
 ### truncate
 
@@ -181,7 +181,7 @@ Encrypts values using symmetric encryption.
 ssn: {
   action: 'encrypt',
   algorithm: 'aes-256-gcm',
-  keyEnv: 'ANONYMIZER_SECRET'
+  keyEnv: 'ANONYMISER_SECRET'
 }
 ```
 
@@ -197,7 +197,7 @@ Notes:
 Run without arguments to launch guided setup:
 
 ```bash
-npx @devasghar/anonymizer
+npx anonymiser
 ```
 
 The CLI can generate the configuration file automatically.
@@ -218,7 +218,7 @@ Example GitHub Actions step:
 
 ```yaml
 - name: Anonymize Database
-  run: npx @devasghar/anonymizer run --config anonymizer.config.ts
+  run: npx anonymiser run --config anonymiser.config.ts
 ```
 
 ---

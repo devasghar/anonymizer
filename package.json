@@ -1,9 +1,9 @@
 {
-    "name": "@devasghar/anonymizer",
+    "name": "anonymiser",
     "version": "0.1.0",
-    "description": "CLI-first database anonymization tool for web projects",
+    "description": "CLI-first database anonymisation tool for web projects",
     "bin": {
-      "anonymizer": "dist/cli.js"
+      "anonymiser": "dist/cli.js"
     },
     "type": "module",
     "scripts": {
