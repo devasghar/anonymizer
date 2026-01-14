@@ -46,7 +46,7 @@ No installation required.
 Run directly via:
 
 ```bash
-npx anonymizer
+npx @devasghar/anonymizer
 ```
 
 ### Requirements
@@ -71,7 +71,7 @@ npx anonymizer
 Reads from a database or dump and produces an anonymized, gzipped SQL dump.
 
 ```bash
-npx anonymizer run
+npx @devasghar/anonymizer run
 ```
 
 - No writes to source DB
@@ -85,7 +85,7 @@ npx anonymizer run
 Writes anonymized data directly into a database.
 
 ```bash
-npx anonymizer run --direct
+npx @devasghar/anonymizer run --direct
 ```
 
 Warnings:
@@ -197,7 +197,7 @@ Notes:
 Run without arguments to launch guided setup:
 
 ```bash
-npx anonymizer
+npx @devasghar/anonymizer
 ```
 
 The CLI can generate the configuration file automatically.
@@ -218,7 +218,7 @@ Example GitHub Actions step:
 
 ```yaml
 - name: Anonymize Database
-  run: npx anonymizer run --config anonymizer.config.ts
+  run: npx @devasghar/anonymizer run --config anonymizer.config.ts
 ```
 
 ---
