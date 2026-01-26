@@ -4,6 +4,8 @@ import chalk from 'chalk'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import fs from 'node:fs/promises'
+import { gzip as gzipCallback } from 'node:zlib'
+import { promisify } from 'node:util'
 import { z } from 'zod'
 import { ConfigSchema, ColumnActionSchema } from './config/schema.js'
 
@@ -168,11 +170,50 @@ async function runAnonymisation(config: AppConfig) {
     console.log(chalk.yellow('Direct mode execution is not yet implemented.'))
     // Future: connect using config.database.url and perform updates
   } else {
-    console.log(
-      chalk.yellow(
-        `Dump mode execution is not yet implemented. Target file: ${config.output.file}`
-      )
-    )
-    // Future: read from dump or url, transform rows, write gzipped SQL
+    // Basic dump mode: generate SQL with supported operations and gzip it
+    const gzip = promisify(gzipCallback)
+    const sql = buildDumpSql(config)
+    const outputPath = path.resolve(process.cwd(), config.output.file)
+    await fs.mkdir(path.dirname(outputPath), { recursive: true })
+    const gz = await gzip(Buffer.from(sql, 'utf8'))
+    await fs.writeFile(outputPath, gz)
+    console.log(chalk.green(`Wrote anonymised dump to ${outputPath}`))
   }
+}
+
+function buildDumpSql(config: AppConfig): string {
+  const lines: string[] = []
+  lines.push('-- Anonymiser dump (basic)')
+  lines.push('-- Generated at ' + new Date().toISOString())
+  lines.push('')
+  for (const [tableName, tableSpec] of Object.entries<any>(config.tables)) {
+    if (typeof tableSpec === 'string') {
+      if (tableSpec === 'truncate') {
+        lines.push(`-- Truncate ${tableName} if it exists`)
+        const safeName = tableName.replace(/'/g, "''")
+        lines.push(`SET @tbl := '${safeName}';`)
+        lines.push(
+          "SET @exists := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = @tbl);"
+        )
+        lines.push(
+          "SET @sql := IF(@exists > 0, CONCAT('TRUNCATE TABLE `', @tbl, '`'), 'SELECT 1');"
+        )
+        lines.push('PREPARE stmt FROM @sql;')
+        lines.push('EXECUTE stmt;')
+        lines.push('DEALLOCATE PREPARE stmt;')
+        lines.push('')
+      }
+      continue
+    }
+    // For now, only emit notes for non-truncate actions
+    const actions = Object.entries<any>(tableSpec)
+      .map(([col, action]) => {
+        if (typeof action === 'string') return `${col}: ${action}`
+        return `${col}: ${action.action}`
+      })
+      .join(', ')
+    lines.push(`-- NOTE: Non-truncate actions for ${tableName} not implemented in dump mode: ${actions}`)
+    lines.push('')
+  }
+  return lines.join('\n')
 }
