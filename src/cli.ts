@@ -141,7 +141,7 @@ function validateSemanticConfig(config: AppConfig) {
 
       if (typeof result.data !== 'string' && result.data.action === 'encrypt') {
         const keyName = result.data.keyEnv
-        const key = process.env[keyName]
+        const key = keyName
         if (!key) {
           throw new Error(
             `Encryption key env "${keyName}" is not set for "${tableName}.${columnName}"`
