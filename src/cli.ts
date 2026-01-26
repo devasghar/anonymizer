@@ -5,7 +5,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import fs from 'node:fs/promises'
 import { z } from 'zod'
-import { ConfigSchema, ColumnActionSchema } from './config/schema'
+import { ConfigSchema, ColumnActionSchema } from './config/schema.js'
 
 const program = new Command()
 
@@ -138,11 +138,13 @@ function validateSemanticConfig(config: AppConfig) {
           `Column "${tableName}.${columnName}" has invalid action: ${result.error.message}`
         )
       }
-      if (result.data.action === 'encrypt') {
-        const key = result.data.keyEnv;
+
+      if (typeof result.data !== 'string' && result.data.action === 'encrypt') {
+        const keyName = result.data.keyEnv
+        const key = process.env[keyName]
         if (!key) {
           throw new Error(
-            `Encryption key env "${result.data.keyEnv}" is not set for "${tableName}.${columnName}"`
+            `Encryption key env "${keyName}" is not set for "${tableName}.${columnName}"`
           )
         }
       }
