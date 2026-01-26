@@ -1,6 +1,6 @@
 {
     "name": "anonymiser",
-    "version": "0.1.1",
+    "version": "0.1.3",
     "description": "CLI-first database anonymisation tool for web projects",
     "bin": {
         "anonymiser": "dist/cli.js"
@@ -20,7 +20,6 @@
     },
     "dependencies": {
         "@faker-js/faker": "^9.0.0",
-        "@types/inquirer": "^9.0.9",
         "chalk": "^5.3.0",
         "commander": "^11.0.0",
         "mysql2": "^3.10.0",

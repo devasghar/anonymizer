@@ -77,7 +77,7 @@ npx anonymiser run
 - No writes to source DB
 - Safest for regulated environments
 - Ideal for CI/CD pipelines
-- Looks for config at `./anonymiser.config.ts` (current working directory)
+- Looks for config at `./anonymiser.config.mjs` (current working directory)
 - By default, writes output to `./database/anonymised.sql.gz`
 - Input dump:
   - If `database.dumpFile` is set in config, that path is used
@@ -97,7 +97,7 @@ Warnings:
 - Strong warning shown
 - Requires confirmation
 - Never use against production
-- Uses config at `./anonymiser.config.ts` (current working directory) if present
+- Uses config at `./anonymiser.config.mjs` (current working directory) if present
 - Requires a valid `database.url` connection string in the config
 
 ---
@@ -106,11 +106,11 @@ Warnings:
 
 Anonymiser is driven by a config file named:
 
-`anonymiser.config.ts`
+`anonymiser.config.mjs`
 
 ### Example Configuration
 
-```ts
+```js
 export default {
   database: {
     type: 'mysql',
@@ -118,8 +118,9 @@ export default {
     // In dump mode, you can set either:
     // dumpFile: './database/database.sql.gz',
     // or leave it empty and place your dump at ./database/database.sql(.gz)
-    // In direct mode, set:
+    // In direct mode, set a URL instead:
     // url: 'mysql://user:password@host:3306/dbname'
+    // Note: URL-encode special characters in the password (e.g., @ -> %40)
   },
 
   output: {
@@ -142,44 +143,77 @@ export default {
 
 ## Quickstart
 
-1) Create a config in the current directory (one-liner):
+Dump mode (default)
+
+1) Create a config in the current directory:
 
 ```bash
-cat > anonymiser.config.ts <<'TS'
+cat > anonymiser.config.mjs <<'JS'
 export default {
   database: {
     type: 'mysql',
     mode: 'dump',
-    // Option A: use a dump file placed in ./database/
+    // Option A: let the tool auto-detect ./database/database.sql(.gz)
+    // Option B: set an explicit path:
     // dumpFile: './database/database.sql.gz',
-    // Option B: let the tool auto-detect ./database/database.sql(.gz)
   },
   output: { file: './database/anonymised.sql.gz' },
   tables: {
     users: {
       email: { action: 'update', type: 'email' },
-      name: { action: 'update', type: 'fullName' },
+      name:  { action: 'update', type: 'fullName' },
       phone: { action: 'update', type: 'phone' },
     },
     audit_logs: 'truncate',
   },
 }
-TS
+JS
 ```
 
-2) Place your dump at `./database/database.sql.gz` (or `./database/database.sql`)
+2) Put your dump in the current directory under `./database/`:
+- `./database/database.sql.gz` (preferred) or `./database/database.sql`
 
-3) Run dump mode:
+3) Run:
 
 ```bash
 npx anonymiser run
 ```
 
-4) Alternatively, direct mode (dangerous). Edit config to include `database.url`, then:
+4) The anonymised dump will be written to `./database/anonymised.sql.gz`.
+
+Direct mode (dangerous – writes to a database)
+
+1) Create a config with mode `direct` and a URL (password must be URL-encoded):
+
+```bash
+cat > anonymiser.config.mjs <<'JS'
+export default {
+  database: {
+    type: 'mysql',
+    mode: 'direct',
+    // Example URL (note @ encoded as %40):
+    // url: 'mysql://user:pa%40ss@localhost:3306/dbname'
+  },
+  output: { file: './database/anonymised.sql.gz' },
+  tables: {
+    users: {
+      email: { action: 'update', type: 'email' },
+      name:  { action: 'update', type: 'fullName' },
+      phone: { action: 'update', type: 'phone' },
+    },
+    audit_logs: 'truncate',
+  },
+}
+JS
+```
+
+2) Run (you will be asked to confirm):
 
 ```bash
 npx anonymiser run --direct
 ```
+
+3) Never run direct mode against production.
 
 ---
 
@@ -249,7 +283,7 @@ Example GitHub Actions step:
 
 ```yaml
 - name: Anonymize Database
-  run: npx anonymiser run --config anonymiser.config.ts
+  run: npx anonymiser run --config anonymiser.config.mjs
 ```
 
 ---

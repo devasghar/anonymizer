@@ -22,7 +22,7 @@ program
 
 program
   .command('run')
-  .option('-c, --config <file>', 'Config file', 'anonymiser.config.ts')
+  .option('-c, --config <file>', 'Config file', 'anonymiser.config.mjs')
   .option('--direct', 'Run in direct DB mode (dangerous)')
   .action(async (options) => {
     if (options.direct) {
