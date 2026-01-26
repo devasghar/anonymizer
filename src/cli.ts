@@ -5,9 +5,11 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import fs from 'node:fs/promises'
 import { gzip as gzipCallback, gunzip as gunzipCallback } from 'node:zlib'
+// encryption removed
 import { promisify } from 'node:util'
 import { z } from 'zod'
 import { ConfigSchema, ColumnActionSchema } from './config/schema.js'
+// encrypt action removed
 
 const program = new Command()
 
@@ -141,15 +143,7 @@ function validateSemanticConfig(config: AppConfig) {
         )
       }
 
-      if (typeof result.data !== 'string' && result.data.action === 'encrypt') {
-        const keyName = result.data.keyEnv
-        const key = keyName
-        if (!key) {
-          throw new Error(
-            `Encryption key env "${keyName}" is not set for "${tableName}.${columnName}"`
-          )
-        }
-      }
+      // encryption removed
     }
   }
 }
@@ -210,7 +204,7 @@ function inferTableColumnsFromDump(dumpText: string): TableColumnsMap {
   let i = 0
   while (i < lines.length) {
     const line = lines[i]
-    const m = line.match(/^CREATE\s+TABLE\s+`([^`]+)`\s*\(/i)
+    const m = line.match(/^CREATE\s+TABLE\s+(?:`[^`]+`\.)?`([^`]+)`\s*\(/i) || line.match(/^CREATE\s+TABLE\s+(?:\w+\.)?(\w+)\s*\(/i)
     if (!m) {
       i++
       continue
@@ -295,12 +289,18 @@ function matchInsertAt(text: string, pos: number): null | {
   valuesStart: number
   statementEnd: number
 } {
-  const re = /INSERT\s+INTO\s+`([^`]+)`(?:\s*\(([^)]+)\))?\s+VALUES\s*/iy
+  // Support: INSERT INTO `table`, INSERT INTO table, INSERT INTO `schema`.`table`, INSERT INTO schema.table
+  const re = /INSERT\s+INTO\s+((?:`[^`]+`|\w+)(?:\.(?:`[^`]+`|\w+))?)\s*(?:\(([^)]+)\))?\s+VALUES\s*/iy
   re.lastIndex = pos
   const m = re.exec(text)
   if (!m) return null
   const start = m.index
-  const table = m[1]
+  const rawIdent = m[1]
+  // Extract table name (after optional schema.)
+  let tableIdent = rawIdent
+  const dotIdx = rawIdent.lastIndexOf('.')
+  if (dotIdx !== -1) tableIdent = rawIdent.slice(dotIdx + 1)
+  const table = tableIdent.replace(/^`|`$/g, '')
   const columns = m[2]
     ? m[2].split(',').map((s) => s.replace(/[` \t\r\n]+/g, '').replace(/^`|`$/g, '')).filter(Boolean)
     : null
@@ -435,12 +435,15 @@ function transformSingleTuple(
     const col = colOrder[idx]
     const action = colActions[col]
     if (!action || typeof action === 'string') return tok // no change
-    if (action.action !== 'update') return tok
-    // Only transform string literals
-    if (!tok.isString) return tok
-    const original = tok.value
-    const transformed = anonymizeByCharClass(original, `${table}.${col}`)
-    return { ...tok, value: transformed }
+    if (action.action === 'update') {
+      // Only transform string literals
+      if (!tok.isString) return tok
+      const original = tok.value
+      const transformed = anonymizeByCharClass(original, `${table}.${col}`)
+      return { ...tok, value: transformed }
+    }
+    // encryption removed
+    return tok
   })
   // Rebuild tuple with proper quoting/escaping
   const rebuilt = newTokens
@@ -554,6 +557,8 @@ function mulberry32(a: number): () => number {
 function randomInt(rng: () => number, min: number, max: number): number {
   return Math.floor(rng() * (max - min + 1)) + min
 }
+
+// encryption removed
 
 function buildDumpSql(config: AppConfig): string {
   const lines: string[] = []

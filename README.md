@@ -119,12 +119,7 @@ export default {
     users: {
       email: { action: 'update', type: 'email' },
       name: { action: 'update', type: 'fullName' },
-      phone: { action: 'update', type: 'phone' },
-      national_id: {
-        action: 'encrypt',
-        algorithm: 'aes-256-gcm',
-        keyEnv: 'ANONYMISER_SECRET'
-      }
+      phone: { action: 'update', type: 'phone' }
     },
 
     audit_logs: 'truncate'
@@ -173,24 +168,6 @@ Supported text-based types:
 
 ---
 
-### encrypt (Reversible – Advanced Use)
-
-Encrypts values using symmetric encryption.
-
-```ts
-ssn: {
-  action: 'encrypt',
-  algorithm: 'aes-256-gcm',
-  keyEnv: 'ANONYMISER_SECRET'
-}
-```
-
-Notes:
-- This is pseudonymization, not anonymisation
-- Key must come from environment variables
-- Intended for controlled workflows only
-
----
 
 ## Interactive CLI
 

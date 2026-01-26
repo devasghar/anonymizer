@@ -13,11 +13,6 @@ export const ColumnActionSchema = z.union([
     action: z.literal('update'),
     type: z.string(),
   }),
-  z.object({
-    action: z.literal('encrypt'),
-    algorithm: z.literal('aes-256-gcm'),
-    keyEnv: z.string(),
-  }),
 ])
 
 export const ConfigSchema = z.object({

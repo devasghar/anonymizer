@@ -13,12 +13,7 @@ export default {
     users: {
       email: { action: 'update', type: 'email' },
       name: { action: 'update', type: 'fullName' },
-      phone: { action: 'update', type: 'phone' },
-      national_id: {
-        action: 'encrypt',
-        algorithm: 'aes-256-gcm',
-        keyEnv: 'ANONYMISER_SECRET',
-      },
+      phone: { action: 'update', type: 'phone' }
     },
 
     audit_logs: 'truncate',
