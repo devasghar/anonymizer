@@ -194,8 +194,13 @@ async function runAnonymisation(config: AppConfig) {
     const gzip = promisify(gzipCallback)
     const outputPath = path.resolve(process.cwd(), config.output.file)
     await fs.mkdir(path.dirname(outputPath), { recursive: true })
-    if (config.database.dumpFile) {
-      const inputPath = path.resolve(process.cwd(), config.database.dumpFile)
+    // Resolve input dump file: explicit path or defaults under ./database/
+    const explicitDump = config.database.dumpFile
+      ? path.resolve(process.cwd(), config.database.dumpFile)
+      : null
+    const inferredDump = explicitDump ?? (await findDefaultDumpFile())
+    if (inferredDump) {
+      const inputPath = inferredDump
       const dumpText = await readInputDump(inputPath)
       const transformed = transformDumpLiterals(dumpText, config)
       const gz = await gzip(Buffer.from(transformed, 'utf8'))
@@ -208,6 +213,23 @@ async function runAnonymisation(config: AppConfig) {
       console.log(chalk.green(`Wrote anonymised dump to ${outputPath}`))
     }
   }
+}
+
+async function findDefaultDumpFile(): Promise<string | null> {
+  const cwd = process.cwd()
+  const candidates = [
+    path.resolve(cwd, 'database/database.sql.gz'),
+    path.resolve(cwd, 'database/database.sql'),
+  ]
+  for (const p of candidates) {
+    try {
+      await fs.access(p)
+      return p
+    } catch {
+      // continue
+    }
+  }
+  return null
 }
 
 async function runDirectMysql(config: AppConfig) {

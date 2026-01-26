@@ -77,6 +77,11 @@ npx anonymiser run
 - No writes to source DB
 - Safest for regulated environments
 - Ideal for CI/CD pipelines
+- Looks for config at `./anonymiser.config.ts` (current working directory)
+- By default, writes output to `./database/anonymised.sql.gz`
+- Input dump:
+  - If `database.dumpFile` is set in config, that path is used
+  - Otherwise, the tool will look for `./database/database.sql.gz` or `./database/database.sql`
 
 ---
 
@@ -92,6 +97,8 @@ Warnings:
 - Strong warning shown
 - Requires confirmation
 - Never use against production
+- Uses config at `./anonymiser.config.ts` (current working directory) if present
+- Requires a valid `database.url` connection string in the config
 
 ---
 
@@ -107,12 +114,16 @@ Anonymiser is driven by a config file named:
 export default {
   database: {
     type: 'mysql',
-    mode: 'dump',
-    url: process.env.DATABASE_URL
+    mode: 'dump', // or 'direct'
+    // In dump mode, you can set either:
+    // dumpFile: './database/database.sql.gz',
+    // or leave it empty and place your dump at ./database/database.sql(.gz)
+    // In direct mode, set:
+    // url: 'mysql://user:password@host:3306/dbname'
   },
 
   output: {
-    file: './anonymised.sql.gz'
+    file: './database/anonymised.sql.gz'
   },
 
   tables: {
@@ -125,6 +136,49 @@ export default {
     audit_logs: 'truncate'
   }
 }
+```
+
+---
+
+## Quickstart
+
+1) Create a config in the current directory (one-liner):
+
+```bash
+cat > anonymiser.config.ts <<'TS'
+export default {
+  database: {
+    type: 'mysql',
+    mode: 'dump',
+    // Option A: use a dump file placed in ./database/
+    // dumpFile: './database/database.sql.gz',
+    // Option B: let the tool auto-detect ./database/database.sql(.gz)
+  },
+  output: { file: './database/anonymised.sql.gz' },
+  tables: {
+    users: {
+      email: { action: 'update', type: 'email' },
+      name: { action: 'update', type: 'fullName' },
+      phone: { action: 'update', type: 'phone' },
+    },
+    audit_logs: 'truncate',
+  },
+}
+TS
+```
+
+2) Place your dump at `./database/database.sql.gz` (or `./database/database.sql`)
+
+3) Run dump mode:
+
+```bash
+npx anonymiser run
+```
+
+4) Alternatively, direct mode (dangerous). Edit config to include `database.url`, then:
+
+```bash
+npx anonymiser run --direct
 ```
 
 ---
