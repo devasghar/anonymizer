@@ -9,6 +9,7 @@ import { gzip as gzipCallback, gunzip as gunzipCallback } from 'node:zlib'
 import { promisify } from 'node:util'
 import { z } from 'zod'
 import { ConfigSchema, ColumnActionSchema } from './config/schema.js'
+import inquirer from 'inquirer'
 // encrypt action removed
 
 const program = new Command()
@@ -34,6 +35,19 @@ program
           'This should NEVER be used against production databases.\n'
         )
       )
+      const { proceed } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'proceed',
+          message:
+            'Are you absolutely sure you want to run in DIRECT mode on this database?',
+          default: false,
+        },
+      ])
+      if (!proceed) {
+        console.log(chalk.yellow('Aborted by user.'))
+        return
+      }
     }
 
     console.log(chalk.green('Starting anonymisation…'))
@@ -161,8 +175,19 @@ function printConfigSummary(config: AppConfig) {
 async function runAnonymisation(config: AppConfig) {
   const mode = config.database.mode
   if (mode === 'direct') {
-    console.log(chalk.yellow('Direct mode execution is not yet implemented.'))
-    // Future: connect using config.database.url and perform updates
+    const dbType = config.database.type
+    if (dbType !== 'mysql') {
+      console.log(
+        chalk.yellow(
+          `Direct mode for "${dbType}" is not implemented yet. Use dump mode instead.`
+        )
+      )
+      return
+    }
+    if (!config.database.url) {
+      throw new Error('database.url is required in direct mode')
+    }
+    await runDirectMysql(config)
   } else {
     // If a dump file is provided, transform it by anonymizing literal INSERT data.
     // Otherwise, fall back to emitting minimal SQL (truncate/update).
@@ -183,6 +208,51 @@ async function runAnonymisation(config: AppConfig) {
       console.log(chalk.green(`Wrote anonymised dump to ${outputPath}`))
     }
   }
+}
+
+async function runDirectMysql(config: AppConfig) {
+  const mysql = await import('mysql2/promise')
+  const conn = await mysql.createConnection(config.database.url as string)
+  try {
+    for (const [tableName, tableSpec] of Object.entries<any>(config.tables)) {
+      if (typeof tableSpec === 'string') {
+        if (tableSpec === 'truncate') {
+          await mysqlTruncateIfExists(conn, tableName)
+          console.log(chalk.green(`Truncated (if exists): ${tableName}`))
+        }
+        continue
+      }
+      // Build UPDATE for columns with update action
+      const setClauses: string[] = []
+      for (const [col, action] of Object.entries<any>(tableSpec)) {
+        if (typeof action === 'string') continue
+        if (action.action === 'update') {
+          const expr = getTypeAwareExpression(col, tableName, String(action.type || 'text'))
+          if (expr) setClauses.push(`\`${col}\` = ${expr}`)
+        }
+      }
+      if (setClauses.length > 0) {
+        const sql = 'UPDATE ?? SET ' + setClauses.join(', ')
+        await conn.query(sql, [tableName])
+        console.log(chalk.green(`Updated: ${tableName} (${setClauses.length} columns)`))
+      }
+    }
+  } finally {
+    await conn.end()
+  }
+}
+
+async function mysqlTruncateIfExists(
+  conn: any,
+  tableName: string
+) {
+  const [rows] = await conn.query(
+    'SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?',
+    [tableName]
+  )
+  const exists = Array.isArray(rows) && rows.length > 0 && (rows[0] as any).c > 0
+  if (!exists) return
+  await conn.query('TRUNCATE TABLE ??', [tableName])
 }
 
 async function readInputDump(filePath: string): Promise<string> {
