@@ -23,7 +23,7 @@ export const ColumnActionSchema = z.union([
 export const ConfigSchema = z.object({
   database: DatabaseSchema,
   output: z.object({
-    file: z.string().default('./anonymized.sql.gz'),
+    file: z.string().default('./anonymised.sql.gz'),
   }),
   tables: z.record(z.any()),
 })
