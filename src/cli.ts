@@ -9,7 +9,8 @@ import { gzip as gzipCallback, gunzip as gunzipCallback } from 'node:zlib'
 import { promisify } from 'node:util'
 import { z } from 'zod'
 import { ConfigSchema, ColumnActionSchema } from './config/schema.js'
-import inquirer from 'inquirer'
+import { createInterface } from 'node:readline/promises'
+import { stdin as input, stdout as output } from 'node:process'
 // encrypt action removed
 
 const program = new Command()
@@ -35,15 +36,7 @@ program
           'This should NEVER be used against production databases.\n'
         )
       )
-      const { proceed } = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'proceed',
-          message:
-            'Are you absolutely sure you want to run in DIRECT mode on this database?',
-          default: false,
-        },
-      ])
+      const proceed = await confirmDirectMode()
       if (!proceed) {
         console.log(chalk.yellow('Aborted by user.'))
         return
@@ -97,6 +90,34 @@ async function assertFileExists(filePath: string) {
     await fs.access(filePath)
   } catch {
     throw new Error(`Config file not found: ${filePath}`)
+  }
+}
+
+async function confirmDirectMode(): Promise<boolean> {
+  // Try inquirer if available
+  try {
+    const mod = await import('inquirer')
+    const inquirer = (mod as any).default ?? mod
+    const { proceed } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'proceed',
+        message:
+          'Are you absolutely sure you want to run in DIRECT mode on this database?',
+        default: false,
+      },
+    ])
+    return !!proceed
+  } catch {
+    // Fallback to readline prompt
+    const rl = createInterface({ input, output })
+    const answer = (await rl.question(
+      'Are you absolutely sure you want to run in DIRECT mode on this database? (y/N) '
+    ))
+      .trim()
+      .toLowerCase()
+    rl.close()
+    return answer === 'y' || answer === 'yes'
   }
 }
 
